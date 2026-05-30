@@ -1,78 +1,177 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import React from "react";
+import Link from "next/link";
+import { GetServerSideProps } from "next";
+import { createClient } from "@supabase/supabase-js";
+import { posts as mockPosts, Post } from "../lib/posts";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+interface Props {
+  trending: Post[];
+  latest: Post[];
+}
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export default function Home() {
+function TagBadge({ tag }: { tag: string }) {
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
-    >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the index.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <Link href={`/tag/${tag.toLowerCase()}`}>
+      <span className="inline-block px-2 py-0.5 text-xs rounded border border-[#2a2825] text-[#c9a96e] hover:bg-[#c9a96e] hover:text-[#0f0e0c] transition-colors cursor-pointer">
+        #{tag}
+      </span>
+    </Link>
+  );
+}
+
+function TrendingCard({ post }: { post: Post }) {
+  return (
+    <Link href={`/blog/${post.slug}`}>
+      <div className="group relative border rounded-lg overflow-hidden transition-all duration-300 cursor-pointer h-full flex flex-col"
+      style={{
+        backgroundColor: 'var(--bg-card)',
+        borderColor: 'var(--border2)',
+      }}
+      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--gold)')}
+      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border2)')}>
+        <div className="h-1 w-full bg-[#c9a96e]" />
+        <div className="p-5 flex flex-col flex-1">
+          <div className="flex gap-2 mb-3">
+            {post.tags.slice(0, 1).map(tag => (
+              <span key={tag} className="text-xs uppercase tracking-widest" style={{ color: 'var(--gold)' }}>
+                # {tag}
+              </span>
+            ))}
+          </div>
+          <h2 className="font-heading text-lg leading-snug mb-2 flex-1 transition-colors" style={{ color: 'var(--text)' }}>
+            {post.title}
+          </h2>
+          <p className="text-sm leading-relaxed mb-4 line-clamp-2" style={{ color: 'var(--text-muted)' }}>
+            {post.excerpt}
           </p>
+          <div className="flex items-center justify-between text-xs mt-auto" style={{ color: 'var(--text-dim)' }}>
+            <span>@{post.author} · {post.readTime} min read</span>
+            <span className="font-medium" style={{ color: 'var(--gold)' }}> ↗ Trending</span>
+          </div>
+          <div className="flex gap-4 mt-3 pt-3 text-xs" style={{ borderTop: '1px solid var(--border)', color: 'var(--text-dim)' }}>
+            <span>💬 {post.comments}</span>
+            <span>↗ {post.shares}</span>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+    </Link>
+  );
+}
+
+function LatestRow({ post }: { post: Post }) {
+  return (
+    <div className="group flex items-center justify-between py-4 transition-colors cursor-pointer" style={{ borderBottom: '1px solid var(--border)' }}>
+      <Link href={`/blog/${post.slug}`} className="flex-1 pr-4 min-w-0">
+        <h3 className="font-heading text-base transition-colors" style={{ color: 'var(--text)' }}>
+          {post.title}
+        </h3>
+        <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>
+          @{post.author} · {new Date(post.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+        </p>
+      </Link>
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="flex gap-1 flex-wrap justify-end">
+          {post.tags.slice(0, 1).map(tag => (
+            <TagBadge key={tag} tag={tag} />
+          ))}
         </div>
-      </main>
+        <span className="text-xs whitespace-nowrap" style={{ color: 'var(--text-dim)' }}>{post.readTime} min</span>
+      </div>
     </div>
   );
+}
+
+export default function Home({ trending = [], latest = [] }: Props) {
+  return (
+    <div className="space-y-12">
+      {/* Trending Section */}
+      <section>
+        <div className="flex items-center gap-3 mb-6">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-[#c9a96e]">Trending Blogs</h2>
+          <div className="flex-1 h-px bg-[#1e1d1b]" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {trending.map(post => (
+            <TrendingCard key={post.slug} post={post} />
+          ))}
+        </div>
+      </section>
+
+      {/* Latest Section */}
+      <section>
+        <div className="flex items-center gap-3 mb-2">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-[#c9a96e]">Latest Posts</h2>
+          <div className="flex-1 h-px bg-[#1e1d1b]" />
+        </div>
+        <div>
+          {latest.map(post => (
+            <LatestRow key={post.slug} post={post} />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: dbPosts } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("published", true)
+      .order("created_at", { ascending: false });
+
+    // Convert Supabase posts to Post shape
+    const realPosts: Post[] = (dbPosts || []).map(p => ({
+      slug: p.slug,
+      title: p.title,
+      excerpt: p.excerpt || "",
+      author: p.author_name || "anonymous",
+      date: p.created_at,
+      tags: p.tags || [],
+      readTime: p.read_time || 1,
+      comments: 0,
+      shares: 0,
+    }));
+
+    // Merge real posts + mock posts (real posts first)
+    const allPosts = [...realPosts, ...mockPosts];
+
+    // Remove duplicates by slug
+    const seen = new Set<string>();
+    const uniquePosts = allPosts.filter(p => {
+      if (seen.has(p.slug)) return false;
+      seen.add(p.slug);
+      return true;
+    });
+
+    // Trending = sorted by readTime + comments + shares
+    const trending = [...uniquePosts]
+      .sort((a, b) => (b.readTime + b.comments + b.shares) - (a.readTime + a.comments + a.shares))
+      .slice(0, 3);
+
+    // Latest = sorted by date
+    const latest = [...uniquePosts]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 8);
+
+    return { props: { trending, latest } };
+  } catch (e) {
+    console.error("Homepage error:", e);
+    return {
+      props: {
+        trending: mockPosts
+          .sort((a, b) => (b.readTime + b.comments + b.shares) - (a.readTime + a.comments + a.shares))
+          .slice(0, 3),
+        latest: mockPosts
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .slice(0, 8),
+      },
+    };
+  }
 }

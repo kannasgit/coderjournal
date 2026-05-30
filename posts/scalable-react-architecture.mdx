@@ -1,0 +1,48 @@
+---
+title: "Building Scalable React Architecture"
+excerpt: "How to structure large React apps with feature folders and clean boundaries."
+author: "devjane"
+date: "2026-05-18"
+tags: ["React", "JavaScript"]
+readTime: 4
+comments: 0
+shares: 1
+---
+
+## The Problem with Flat Structure
+
+Most React apps start flat — everything in a single `components/` folder. It works at first, but as the app grows, imports get messy and boundaries blur.
+
+## Feature Folders
+
+The idea is simple: group files by **feature**, not by type.
+src/
+features/
+auth/
+components/
+hooks/
+api.ts
+dashboard/
+components/
+hooks/
+api.ts
+
+## Shared vs Feature Components
+
+Not everything belongs in a feature. Buttons, inputs, modals — these are shared. The rule of thumb: if two features use it, it goes in `shared/`.
+
+## Clean Boundaries
+
+Each feature should expose a clean public API via an `index.ts`. Other features import only from that index — never from deep inside another feature's folder.
+
+```ts
+// Good
+import { AuthGuard } from "@/features/auth";
+
+// Bad
+import { AuthGuard } from "@/features/auth/components/AuthGuard";
+```
+
+## Wrapping Up
+
+Feature folders scale well, keep imports clean, and make onboarding new developers much easier. Start refactoring one feature at a time.

@@ -1,0 +1,51 @@
+---
+title: "Advanced TypeScript Patterns in 2025"
+excerpt: "Dive deep into utility types, conditional types, and template literal types."
+author: "coder_ayan"
+date: "2026-05-20"
+tags: ["TypeScript", "JavaScript"]
+readTime: 5
+comments: 0
+shares: 0
+---
+
+## What are Utility Types?
+
+TypeScript ships with a set of built-in utility types that make type transformations clean and expressive. Instead of rewriting complex types from scratch, you can compose them.
+
+```ts
+type User = {
+  id: number;
+  name: string;
+  email: string;
+};
+
+type PartialUser = Partial<User>;
+type ReadonlyUser = Readonly<User>;
+type UserPreview = Pick<User, "id" | "name">;
+```
+
+## Conditional Types
+
+Conditional types let you write types that depend on other types — like ternary operators but for the type system.
+
+```ts
+type IsString<T> = T extends string ? "yes" : "no";
+
+type A = IsString<string>; // "yes"
+type B = IsString<number>; // "no"
+```
+
+## Template Literal Types
+
+One of the most powerful features added in TypeScript 4.1 — you can now construct string types using template literals.
+
+```ts
+type EventName = "click" | "focus" | "blur";
+type Handler = `on${Capitalize<EventName>}`;
+// "onClick" | "onFocus" | "onBlur"
+```
+
+## Wrapping Up
+
+These patterns unlock a new level of expressiveness in your TypeScript code. Start with utility types, get comfortable with conditionals, and template literals will feel natural before long.

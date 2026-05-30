@@ -1,0 +1,14 @@
+{
+  "banned": [
+    "violence", "violent", "gore", "murder", "kill", "killing",
+    "nudity", "nude", "naked", "pornography", "porn", "sexual",
+    "hate", "hatred", "racist", "racism", "slur",
+    "abuse", "abusive", "harass", "harassment",
+    "explicit", "obscene", "vulgar",
+    "terrorist", "terrorism", "extremist",
+    "suicide", "self-harm", "selfharm",
+    "drug", "cocaine", "heroin", "meth",
+    "scam", "phishing", "malware", "hack", "fuck", "nigga", "nigger",
+    "cannibalism", "cannibal"
+  ]
+}
