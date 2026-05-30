@@ -7,9 +7,10 @@ import bannedWords from "../../lib/banned-words.json";
 const BANNED_WORDS = ["violence", "nudity", "hate", "abuse", "explicit"];
 
 function moderateContent(text: string): string | null {
-  const lower = text.toLowerCase();
-  for (const word of bannedWords.banned) {
-    if (lower.includes(word)) return word;
+    const lower = text.toLowerCase();
+    for (const word of bannedWords.banned) {
+    const regex = new RegExp(`\\b${word}\\b`, "i");
+    if (regex.test(lower)) return word;
   }
   return null;
 }
