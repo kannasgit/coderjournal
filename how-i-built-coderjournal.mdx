@@ -1,0 +1,109 @@
+---
+title: "How I Built CoderJournal — A Full Stack Blog Platform From Scratch"
+excerpt: "Blank pages, broken themes, and Supabase errors. Here's how I actually built this thing."
+author: "weeb_dk"
+date: "2026-05-30"
+tags: ["Next.js", "TypeScript", "Supabase"]
+readTime: 6
+---
+
+## It Started With a Simple Idea
+
+I wanted a place to write about code. Not Medium. Not Dev.to. Something mine. Something that actually looked good and didn't feel like every other blog platform out there.
+
+So I decided to build it myself.
+
+Big mistake. Just kidding — kind of.
+
+---
+
+## The Plan
+
+The idea was straightforward on paper. A Next.js blog platform with a dark editorial theme, Google sign-in, MDX writing support, and a real database behind it. I called it **The CoderJournal**.
+
+I had a rough feature list in my head:
+
+- A side pane like Claude's — toggleable, clean
+- Trending blogs on the homepage
+- A proper MDX editor with live preview
+- Tags, comments, notifications, settings
+
+Simple right? Yeah I thought so too.
+
+---
+
+## Phase 1 — Building the UI
+
+The first thing I worked on was the layout. Getting the side pane to behave correctly on both desktop and mobile took longer than I expected. The hamburger animation, the overlay on mobile, the content shifting on desktop — all of it had to feel smooth.
+
+The theme was non-negotiable from the start. Dark background `#0f0e0c`, gold accents `#c9a96e`, Playfair Display for headings, DM Sans for body text. I knew exactly what I wanted it to look like and I wasn't moving from that.
+
+Getting the fonts to load correctly was its own small battle. Tailwind v4 handles CSS differently from what most tutorials show. The `@import` for Google Fonts had to come before everything else or the whole build would fail. Found that out the hard way.
+
+---
+
+## The Blank Page Era
+
+Okay so here's where things got rough.
+
+Multiple times during this build I would make a change, save the file, refresh the browser and just see — nothing. A completely blank dark page. No error. No warning. Just darkness.
+
+It happened with the blog post page first. I spent a while staring at the code before realizing there was a typo in the file path — `.mdxx` instead of `.mdx`. One extra character. One completely broken page.
+
+Then it happened again when I imported `fs` and `path` at the top of `lib/posts.ts`. Those are Node.js modules. They can't run in the browser. The fix was splitting the file reading logic into a separate `lib/mdx.ts` file that only gets called server-side. Obvious in hindsight. Not obvious at 11pm.
+
+Then the CSS broke the whole page when I tried to add the light/dark theme. The `@import` was in the wrong order again.
+
+Every blank page had a reason. I just had to find it.
+
+---
+
+## Phase 2 — Auth and Database
+
+Setting up Google OAuth with NextAuth was actually smoother than I expected. The tricky part was Supabase.
+
+The first time I tried to save a post to the database it took 71 seconds and then failed. Turns out the auth callback was trying to insert a Google user ID as a UUID into Supabase, and Google IDs look nothing like UUIDs. The database just rejected it silently and the whole request stalled.
+
+The fix was to stop using `author_id` entirely and just store the author's name and email as plain text. Simple. Effective.
+
+After that posts started saving instantly. Clicking publish and seeing your own post appear on the homepage for the first time hits different.
+
+---
+
+## Phase 3 — The Details
+
+The features that felt small actually took the most thought.
+
+**Display name persistence** — session-based names reset on refresh. Had to store it in Supabase and fetch it on every load. Now it sticks.
+
+**Custom tags** — the original design had a fixed list of tags. That felt limiting. Changed it so users can type any tag they want, press Enter, and it gets added. The side pane search pulls all real tags from the database dynamically.
+
+**Content moderation** — every post gets checked against a JSON file of banned words before it saves. If something gets flagged the post is blocked and the user gets told exactly which word caused it. Clean and transparent.
+
+---
+
+## What I Learned
+
+A few things stuck with me from this build:
+
+**Read the error properly.** Half the blank pages I debugged could have been fixed in 2 minutes if I had read the terminal error instead of just refreshing and hoping.
+
+**Split server and client code clearly.** Next.js lets you mix them but you'll pay for it later. Keep Node.js stuff in API routes and `lib/` files that never touch the browser.
+
+**CSS import order matters more than you think.** With Tailwind v4 especially. Get it wrong and the whole build collapses.
+
+**Ship something ugly first.** I spent way too long on the theme early on. The functionality should work before the design is perfect.
+
+---
+
+## Is It Done?
+
+Mostly. The core is solid — auth, posts, comments, notifications, settings, moderation, everything works. There are always more features to add but at some point you have to call it done and actually use the thing.
+
+So here we are. First post on CoderJournal, written on CoderJournal.
+
+Feels good.
+
+---
+
+*If you want to check out the code, it's on GitHub. And if you found this useful or relatable, drop a comment below. Would love to know if anyone else has been haunted by blank pages at midnight.*
